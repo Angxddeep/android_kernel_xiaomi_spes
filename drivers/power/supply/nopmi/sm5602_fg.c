@@ -697,7 +697,7 @@ static int fg_get_cycle(struct sm_fg_chip *sm)
 		pr_err("read cycle reg fail ret = %d\n", ret);
 		cycle = pre_cycle;
 	} else {
-		cycle = data&0x01FF;
+		cycle = data;
 	}
 	pre_cycle = cycle;
 	return cycle;
