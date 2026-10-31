@@ -439,6 +439,10 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		}
 		nav_event_input(gf_dev, nav_event);
 		break;
+#else
+	case GF_IOC_INPUT_KEY_EVENT:
+	case GF_IOC_NAV_EVENT:
+		break;
 #endif
 	case GF_IOC_ENABLE_SPI_CLK:
 #ifdef AP_CONTROL_CLK
@@ -824,6 +828,7 @@ static int gf_probe(struct platform_device *pdev)
 	}
 	mutex_unlock(&device_list_lock);
 
+#if defined(SUPPORT_NAV_EVENT)
 	if (status == 0) {
 		/*input device subsystem */
 		gf_dev->input = input_allocate_device();
@@ -833,10 +838,8 @@ static int gf_probe(struct platform_device *pdev)
 			goto error_dev;
 		}
 
-#if defined(SUPPORT_NAV_EVENT)
 		for (i = 0; i < ARRAY_SIZE(maps); i++)
 			input_set_capability(gf_dev->input, maps[i].type, maps[i].code);
-#endif
 
 		gf_dev->input->name = GF_INPUT_NAME;
 		gf_dev->input->id.vendor = 0x0666;
@@ -847,6 +850,7 @@ static int gf_probe(struct platform_device *pdev)
 			goto error_input;
 		}
 	}
+#endif
 #ifdef AP_CONTROL_CLK
 	pr_info("Get the clk resource.\n");
 	/* Enable spi clock */
@@ -871,7 +875,12 @@ static int gf_probe(struct platform_device *pdev)
 	proc_entry = proc_create(PROC_NAME, 0644, NULL, &proc_file_goodix_ops);
 	if (!proc_entry) {
 		pr_err("gf3258 Couldn't create proc entry!\n");
-		return -ENOMEM;
+		status = -ENOMEM;
+#if defined(SUPPORT_NAV_EVENT)
+		goto error_input_registered;
+#else
+		goto error_dev;
+#endif
 	}
 	pr_info("version V%d.%d.%02d\n", VER_MAJOR, VER_MINOR, PATCH_LEVEL);
 
@@ -882,10 +891,13 @@ gfspi_probe_clk_enable_failed:
 	gfspi_ioctl_clk_uninit(gf_dev);
 gfspi_probe_clk_init_failed:
 #endif
+#if defined(SUPPORT_NAV_EVENT)
+error_input_registered:
 	input_unregister_device(gf_dev->input);
 error_input:
 	if (gf_dev->input)
 		input_free_device(gf_dev->input);
+#endif
 error_dev:
 	if (gf_dev->devt != 0) {
 		pr_info("Err: status=%d\n", status);
@@ -915,9 +927,12 @@ static int gf_remove(struct platform_device *pdev)
 	if (gf_dev->irq)
 		free_irq(gf_dev->irq, gf_dev);
 
-	if (gf_dev->input)
+#if defined(SUPPORT_NAV_EVENT)
+	if (gf_dev->input) {
 		input_unregister_device(gf_dev->input);
-	input_free_device(gf_dev->input);
+		input_free_device(gf_dev->input);
+	}
+#endif
 
 	/* prevent new opens */
 	mutex_lock(&device_list_lock);

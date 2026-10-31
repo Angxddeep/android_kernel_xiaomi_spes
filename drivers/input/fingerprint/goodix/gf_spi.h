@@ -18,9 +18,8 @@ enum FP_MODE {
 	GF_DEBUG_MODE = 0x56
 };
 
-// #define SUPPORT_NAV_EVENT
+/* #define SUPPORT_NAV_EVENT */
 
-#if defined(SUPPORT_NAV_EVENT)
 #define GF_NAV_INPUT_UP			KEY_UP
 #define GF_NAV_INPUT_DOWN		KEY_DOWN
 #define GF_NAV_INPUT_LEFT		KEY_LEFT
@@ -69,7 +68,6 @@ struct gf_key_map {
 	unsigned int type;
 	unsigned int code;
 };
-#endif
 
 struct gf_ioc_chip_info {
 	unsigned char vendor_id;
@@ -94,12 +92,8 @@ struct gf_ioc_chip_info {
 #define GF_IOC_REMOVE		_IO(GF_IOC_MAGIC, 12)
 #define GF_IOC_CHIP_INFO	_IOW(GF_IOC_MAGIC, 13, struct gf_ioc_chip_info)
 
-#if defined(SUPPORT_NAV_EVENT)
 #define GF_IOC_NAV_EVENT	_IOW(GF_IOC_MAGIC, 14, gf_nav_event_t)
 #define GF_IOC_MAXNR	15 /* THIS MACRO IS NOT USED NOW... */
-#else
-#define GF_IOC_MAXNR	14 /* THIS MACRO IS NOT USED NOW... */
-#endif
 
 /*#define AP_CONTROL_CLK 1*/
 #define USE_PLATFORM_BUS 1
