@@ -7781,6 +7781,12 @@ int dsi_display_enable(struct dsi_display *display)
 		}
 
 		display->panel->panel_initialized = true;
+		/*
+		 * Preserve the post-enable backlight retry for continuous splash.
+		 * The initial Android brightness request must be treated like a
+		 * normal panel enable, even though the panel handoff returns early.
+		 */
+		atomic_set(&display->display_enabled, 1);
 		DSI_DEBUG("cont splash enabled, display enable not required\n");
 		return 0;
 	}
